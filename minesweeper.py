@@ -14,6 +14,11 @@ class Minesweeper:
         self.mine_positions = set()
         self.game_over = False
 
+        self.timer_Label = None
+        self.elapsed_time = 0
+        self.tiem_running = False
+
+
         # Load images
         self.mine_img = ImageTk.PhotoImage(Image.open("icons8-bomb-24.png"))
         self.flag_img = ImageTk.PhotoImage(Image.open("icons8-finish-flag-24.png"))
@@ -35,6 +40,9 @@ class Minesweeper:
         button15.pack(side=tk.LEFT, padx=10, pady=10)
         button20.pack(side=tk.LEFT, padx=10, pady=10)
 
+        self.timer_Label = tk.Label(self.master , text="Time: 0s")
+        self.timer_Label.pack(pady=10)
+
     def set_size(self, rows, columns, mines):
         self.rows = rows
         self.columns = columns
@@ -51,6 +59,7 @@ class Minesweeper:
         self.create_widgets()
         self.place_mines()
         self.update_numbers()
+        self.reset_Timer()
 
     def create_widgets(self):
         for r in range(self.rows):
@@ -78,12 +87,15 @@ class Minesweeper:
                         self.numbers[nr][nc] += 1
 
     def click(self, r, c):
+        if not self.tiem_running:
+            self.startTimer()
         if self.game_over:
             return
         if (r, c) in self.mine_positions:
             self.buttons[r][c].config(image=self.mine_img)
             self.game_over = True
             self.reveal_mines()
+            self.stopTimer()
             messagebox.showinfo("Game Over", "You clicked on a mine!")
         else:
             self.reveal(r, c)
@@ -129,7 +141,26 @@ class Minesweeper:
                     win = False
         if win:
             self.game_over = True
+            self.stopTimer()
             messagebox.showinfo("Congratulations", "You won!")
+
+    def reset_Timer(self):
+        self.elapsed_time = 0
+        self.tiem_running = False
+        self.update_Timer()
+
+    def startTimer(self):
+        self.tiem_running = True
+        self.update_Timer()
+
+    def stopTimer(self):
+        self.tiem_running = False
+
+    def update_Timer(self):
+        if self.tiem_running:
+            self.elapsed_time +=1
+            self.timer_Label.config(text=f"Time: {self.elapsed_time}s")
+            self.master.after(1000,self.update_Timer)
 
 if __name__ == "__main__":
     root = tk.Tk()
