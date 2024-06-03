@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
 import random
+import json
 
 class Minesweeper:
     def __init__(self, master):
@@ -14,19 +15,24 @@ class Minesweeper:
         self.mine_positions = set()
         self.game_over = False
 
-        self.timer_Label = None
+        # Timer variables
+        self.timer_label = None
         self.elapsed_time = 0
-        self.tiem_running = False
+        self.timer_running = False
 
-
-        # Load images
-        self.mine_img = ImageTk.PhotoImage(Image.open("icons8-bomb-24.png"))
-        self.flag_img = ImageTk.PhotoImage(Image.open("icons8-finish-flag-24.png"))
+        # Load and resize images
+        self.mine_img = Image.open("mine.png").resize((24, 24), Image.LANCZOS)
+        self.mine_img = ImageTk.PhotoImage(self.mine_img)
+        self.flag_img = Image.open("flag.png").resize((24, 24), Image.LANCZOS)
+        self.flag_img = ImageTk.PhotoImage(self.flag_img)
 
         self.frame = tk.Frame(master)
         self.frame.pack()
 
         self.create_size_buttons()
+        self.create_difficulty_buttons()
+        self.create_reset_button()
+        self.create_high_scores_button()
 
     def create_size_buttons(self):
         size_frame = tk.Frame(self.master)
@@ -40,8 +46,31 @@ class Minesweeper:
         button15.pack(side=tk.LEFT, padx=10, pady=10)
         button20.pack(side=tk.LEFT, padx=10, pady=10)
 
-        self.timer_Label = tk.Label(self.master , text="Time: 0s")
-        self.timer_Label.pack(pady=10)
+        self.timer_label = tk.Label(self.master, text="Time: 0s")
+        self.timer_label.pack(pady=10)
+
+    def create_difficulty_buttons(self):
+        difficulty_frame = tk.Frame(self.master)
+        difficulty_frame.pack()
+
+        easy_button = tk.Button(difficulty_frame, text="Easy", command=lambda: self.set_size(9, 9, 10))
+        medium_button = tk.Button(difficulty_frame, text="Medium", command=lambda: self.set_size(16, 16, 40))
+        hard_button = tk.Button(difficulty_frame, text="Hard", command=lambda: self.set_size(30, 16, 99))
+
+        easy_button.pack(side=tk.LEFT, padx=10, pady=10)
+        medium_button.pack(side=tk.LEFT, padx=10, pady=10)
+        hard_button.pack(side=tk.LEFT, padx=10, pady=10)
+
+    def create_reset_button(self):
+        reset_button = tk.Button(self.master, text="Reset", command=self.reset_game)
+        reset_button.pack(pady=10)
+
+    def create_high_scores_button(self):
+        high_scores_button = tk.Button(self.master, text="High Scores", command=self.display_high_scores)
+        high_scores_button.pack(pady=10)
+
+    def reset_game(self):
+        self.set_size(self.rows, self.columns, self.mines)
 
     def set_size(self, rows, columns, mines):
         self.rows = rows
@@ -59,13 +88,13 @@ class Minesweeper:
         self.create_widgets()
         self.place_mines()
         self.update_numbers()
-        self.reset_Timer()
+        self.reset_timer()
 
     def create_widgets(self):
         for r in range(self.rows):
             row = []
             for c in range(self.columns):
-                button = tk.Button(self.frame, text="", width=10, command=lambda r=r, c=c: self.click(r, c))
+                button = tk.Button(self.frame, text="", width=3, height=1, command=lambda r=r, c=c: self.click(r, c))
                 button.bind("<Button-3>", lambda e, r=r, c=c: self.right_click(r, c))
                 button.grid(row=r, column=c)
                 row.append(button)
@@ -87,15 +116,15 @@ class Minesweeper:
                         self.numbers[nr][nc] += 1
 
     def click(self, r, c):
-        if not self.tiem_running:
-            self.startTimer()
+        if not self.timer_running:
+            self.start_timer()
         if self.game_over:
             return
         if (r, c) in self.mine_positions:
             self.buttons[r][c].config(image=self.mine_img)
             self.game_over = True
             self.reveal_mines()
-            self.stopTimer()
+            self.stop_timer()
             messagebox.showinfo("Game Over", "You clicked on a mine!")
         else:
             self.reveal(r, c)
@@ -141,26 +170,48 @@ class Minesweeper:
                     win = False
         if win:
             self.game_over = True
-            self.stopTimer()
+            self.stop_timer()
+            self.save_high_score(self.elapsed_time, f"{self.rows}x{self.columns}")
             messagebox.showinfo("Congratulations", "You won!")
 
-    def reset_Timer(self):
+    def reset_timer(self):
         self.elapsed_time = 0
-        self.tiem_running = False
-        self.update_Timer()
+        self.timer_running = False
+        self.update_timer()
 
-    def startTimer(self):
-        self.tiem_running = True
-        self.update_Timer()
+    def start_timer(self):
+        self.timer_running = True
+        self.update_timer()
 
-    def stopTimer(self):
-        self.tiem_running = False
+    def stop_timer(self):
+        self.timer_running = False
 
-    def update_Timer(self):
-        if self.tiem_running:
-            self.elapsed_time +=1
-            self.timer_Label.config(text=f"Time: {self.elapsed_time}s")
-            self.master.after(1000,self.update_Timer)
+    def update_timer(self):
+        if self.timer_running:
+            self.elapsed_time += 1
+            self.timer_label.config(text=f"Time: {self.elapsed_time}s")
+            self.master.after(1000, self.update_timer)
+
+    def save_high_score(self, time, difficulty):
+        high_scores = self.load_high_scores()
+        if difficulty not in high_scores or time < high_scores[difficulty]:
+            high_scores[difficulty] = time
+            with open("high_scores.json", "w") as f:
+                json.dump(high_scores, f)
+
+    def load_high_scores(self):
+        try:
+            with open("high_scores.json", "r") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            return {}
+
+    def display_high_scores(self):
+        high_scores = self.load_high_scores()
+        message = ""
+        for difficulty, score in high_scores.items():
+            message += f"{difficulty}: {score}s\n"
+        messagebox.showinfo("High Scores", message)
 
 if __name__ == "__main__":
     root = tk.Tk()
