@@ -1,14 +1,14 @@
 import tkinter as tk
 from tkinter import messagebox
-from PIL import Image, ImageTk  # Make sure you have Pillow installed
+from PIL import Image, ImageTk
 import random
 
 class Minesweeper:
-    def __init__(self, master, rows=10, columns=10, mines=10):
+    def __init__(self, master):
         self.master = master
-        self.rows = rows
-        self.columns = columns
-        self.mines = mines
+        self.rows = 10
+        self.columns = 10
+        self.mines = 10
         self.buttons = []
         self.flags = 0
         self.mine_positions = set()
@@ -21,6 +21,33 @@ class Minesweeper:
         self.frame = tk.Frame(master)
         self.frame.pack()
 
+        self.create_size_buttons()
+
+    def create_size_buttons(self):
+        size_frame = tk.Frame(self.master)
+        size_frame.pack()
+
+        button10 = tk.Button(size_frame, text="10x10", command=lambda: self.set_size(10, 10, 10))
+        button15 = tk.Button(size_frame, text="15x15", command=lambda: self.set_size(15, 15, 30))
+        button20 = tk.Button(size_frame, text="20x20", command=lambda: self.set_size(20, 20, 50))
+
+        button10.pack(side=tk.LEFT, padx=10, pady=10)
+        button15.pack(side=tk.LEFT, padx=10, pady=10)
+        button20.pack(side=tk.LEFT, padx=10, pady=10)
+
+    def set_size(self, rows, columns, mines):
+        self.rows = rows
+        self.columns = columns
+        self.mines = mines
+
+        self.buttons = []
+        self.flags = 0
+        self.mine_positions = set()
+        self.game_over = False
+
+        for widget in self.frame.winfo_children():
+            widget.destroy()
+
         self.create_widgets()
         self.place_mines()
         self.update_numbers()
@@ -29,7 +56,7 @@ class Minesweeper:
         for r in range(self.rows):
             row = []
             for c in range(self.columns):
-                button = tk.Button(self.frame, text="", width=5, command=lambda r=r, c=c: self.click(r, c))
+                button = tk.Button(self.frame, text="", width=10, command=lambda r=r, c=c: self.click(r, c))
                 button.bind("<Button-3>", lambda e, r=r, c=c: self.right_click(r, c))
                 button.grid(row=r, column=c)
                 row.append(button)
