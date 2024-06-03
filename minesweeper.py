@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+from PIL import Image, ImageTk  # Make sure you have Pillow installed
 import random
 
 class Minesweeper:
@@ -13,6 +14,10 @@ class Minesweeper:
         self.mine_positions = set()
         self.game_over = False
 
+        # Load images
+        self.mine_img = ImageTk.PhotoImage(Image.open("icons8-bomb-24.png"))
+        self.flag_img = ImageTk.PhotoImage(Image.open("icons8-finish-flag-24.png"))
+
         self.frame = tk.Frame(master)
         self.frame.pack()
 
@@ -24,7 +29,7 @@ class Minesweeper:
         for r in range(self.rows):
             row = []
             for c in range(self.columns):
-                button = tk.Button(self.frame, text="", width=3, command=lambda r=r, c=c: self.click(r, c))
+                button = tk.Button(self.frame, text="", width=5, command=lambda r=r, c=c: self.click(r, c))
                 button.bind("<Button-3>", lambda e, r=r, c=c: self.right_click(r, c))
                 button.grid(row=r, column=c)
                 row.append(button)
@@ -49,7 +54,7 @@ class Minesweeper:
         if self.game_over:
             return
         if (r, c) in self.mine_positions:
-            self.buttons[r][c].config(text="*", bg="red")
+            self.buttons[r][c].config(image=self.mine_img)
             self.game_over = True
             self.reveal_mines()
             messagebox.showinfo("Game Over", "You clicked on a mine!")
@@ -62,9 +67,11 @@ class Minesweeper:
             return
         if self.buttons[r][c]["text"] == "F":
             self.buttons[r][c]["text"] = ""
+            self.buttons[r][c].config(image="")
             self.flags -= 1
         else:
             self.buttons[r][c]["text"] = "F"
+            self.buttons[r][c].config(image=self.flag_img)
             self.flags += 1
         self.check_win()
 
@@ -83,7 +90,7 @@ class Minesweeper:
 
     def reveal_mines(self):
         for r, c in self.mine_positions:
-            self.buttons[r][c].config(text="*", bg="red")
+            self.buttons[r][c].config(image=self.mine_img)
 
     def check_win(self):
         win = True
@@ -97,3 +104,8 @@ class Minesweeper:
             self.game_over = True
             messagebox.showinfo("Congratulations", "You won!")
 
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.title("Minesweeper")
+    game = Minesweeper(root)
+    root.mainloop()
