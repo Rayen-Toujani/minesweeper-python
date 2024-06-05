@@ -3,6 +3,7 @@ from tkinter import messagebox
 from PIL import Image, ImageTk
 import random
 import json
+import pygame
 
 class Minesweeper:
     def __init__(self, master):
@@ -28,6 +29,10 @@ class Minesweeper:
 
         self.frame = tk.Frame(master)
         self.frame.pack()
+
+        pygame.mixer.init()
+
+        self.mine_sound = pygame.mixer.Sound("BombSoundEffect.m4a")
 
         self.create_size_buttons()
         self.create_difficulty_buttons()
@@ -123,6 +128,7 @@ class Minesweeper:
         if (r, c) in self.mine_positions:
             self.buttons[r][c].config(image=self.mine_img)
             self.game_over = True
+            self.mine_sound.play()
             self.reveal_mines()
             self.stop_timer()
             messagebox.showinfo("Game Over", "You clicked on a mine!")
