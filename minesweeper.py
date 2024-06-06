@@ -32,7 +32,8 @@ class Minesweeper:
 
         pygame.mixer.init()
 
-        self.mine_sound = pygame.mixer.Sound("BombSoundEffect.m4a")
+        self.mine_sound = pygame.mixer.Sound("BombSoundEffect.wav")
+        self.click_sound = pygame.mixer.Sound("Click - Sound Effect (HD).wav")
 
         self.create_size_buttons()
         self.create_difficulty_buttons()
@@ -128,12 +129,14 @@ class Minesweeper:
         if (r, c) in self.mine_positions:
             self.buttons[r][c].config(image=self.mine_img)
             self.game_over = True
+            self.click_sound.play()
             self.mine_sound.play()
             self.reveal_mines()
             self.stop_timer()
             messagebox.showinfo("Game Over", "You clicked on a mine!")
         else:
             self.reveal(r, c)
+            self.click_sound.play()
             self.check_win()
 
     def right_click(self, r, c):
