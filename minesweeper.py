@@ -34,6 +34,7 @@ class Minesweeper:
 
         self.mine_sound = pygame.mixer.Sound("BombSoundEffect.wav")
         self.click_sound = pygame.mixer.Sound("Click - Sound Effect (HD).wav")
+        self.Flag_Sound = pygame.mixer.Sound("Minecraft Menu Button Sound Effect _ Sounffex.wav")
 
         self.create_size_buttons()
         self.create_difficulty_buttons()
@@ -146,7 +147,9 @@ class Minesweeper:
             self.buttons[r][c]["text"] = ""
             self.buttons[r][c].config(image="")
             self.flags -= 1
+            self.Flag_Sound.play()
         else:
+            self.Flag_Sound.play()
             self.buttons[r][c]["text"] = "F"
             self.buttons[r][c].config(image=self.flag_img)
             self.flags += 1
